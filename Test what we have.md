@@ -1,12 +1,12 @@
 ## What did we get
 
-Our λanguage so far, although small, is (theoretically) capable to solve any problem that can be solved computationally. That's because some guys smarter than I'll ever be — Alonzo Church and Alan Turing — proved in a more civilized age that λ-calculus is equivalent to the Turing machine, and our λanguage models λ-Calculus.
+到目前为止，我们的λ语言虽然很小，但（理论上）能够解决任何可以通过计算解决的问题。这是因为Alonzo Church和Alan Turing是比我更聪明的人，在更文明的时代证明了λ微积分与Turing机器等效，而我们的λ语言模型λ微积分
 
-What this really means is that even if our λanguage lacks certain features, we can implement them in terms of what we have, or if that proves too difficult, we can write an interpreter for another language in it.
+这实际上意味着的是，即使我们的λ语言缺乏某些功能，我们也可以根据我们所拥有的语言来实现它们，或者如果事实证明太困难了，我们可以为其中的另一种语言编写解释器。
 
-### Loops
+#### 循环
 
-Loops are non-essential when we have recursion. I already shown a sample that loops via recursion. Let's try it. Note, you can edit the code in these samples, and run it with the dimmed "Run" button in the top-right (also: CTRL-ENTER to run, CTRL-L to clear output — these work while the cursor is in the code area on the left); use print / println for output. Feel free to play around, it's your browser who runs it.
+当我们有递归时，循环是不必要的。我已经展示了一个通过递归循环的示例。让我们尝试一下。请注意，您可以编辑这些示例中的代码，并使用右上角变暗的“运行”按钮运行它（也可以：CTRL-ENTER运行，CTRL-L清除输出-这些工作在光标位于左侧的代码区）；使用print / println进行输出。随时随地玩吧，是您的浏览器来运行它。
 
 ```js
 print_range = λ(a, b) if a <= b {
@@ -17,31 +17,46 @@ print_range = λ(a, b) if a <= b {
                         } else println("");
                       };
 print_range(1, 10);
-
 ```
-However, there is a problem if we increase the range to, say, 1000 instead of 10. I get “Maximum call stack size exceeded” after 600 (and something) is printed. That's because our evaluator is recursive and will exhaust the JavaScript stack.
 
-This is one serious problem, but there are solutions. It might seem tempting to add some iteration keywords, like for or while, but let's not. Recursion is beautiful, we don't have to give it up. We'll see later how we can workaround this limitation.
+打印结果：
 
-### Data structures (or lack thereof)
-Our λanguage appears to have three types: number, string, and boolean. It might seem impossible to create compound structures such as objects or lists. But in fact, we do have one more type: the function. It turns out that in λ-calculus we can use functions to construct any data structure, including objects with inheritance.
-
-#### Here I'll show lists
-Let's wish we had a function named cons which constructs a special object holding two values; let's call that object “cons cell” or “pair”. We'll name one of these values “car”, and the other “cdr”, because that's how they've been named in Lisp for decades. And given a cell object, we can use the functions car and cdr to retrieve the respective values from the pair. Therefore:
-
+```js
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+***Result: false
 ```
+
+但是，如果我们将范围增加到1000，而不是10，则会出现问题。在打印600（或其他内容）后，我得到“已超出最大调用堆栈大小”。这是因为我们的评估器是递归的，将耗尽JavaScript堆栈。
+
+
+
+这是一个严重的问题，但是有解决方案。添加一些迭代关键字似乎很诱人，例如for或while，但不要这样。递归很漂亮，我们不必放弃。稍后我们将看到如何解决此限制.
+
+
+
+#### 数据结构（或缺少数据结构）
+
+我们的λ语言似乎具有三种类型：数字，字符串和布尔值。创建复合结构（例如对象或列表）似乎是不可能的。但实际上，我们还有另外一种类型：函数。事实证明，在λ微积分中，我们可以使用函数来构造任何数据结构，包括具有继承关系的对象
+
+
+
+##### 在这里我将显示列表
+
+希望我们有一个名为cons的函数，该函数构造一个包含两个值的特殊对象。我们将该对象称为“ cons cell”或“ pair”。我们将其中一个值命名为“ car”，将另一个值命名为“ cdr”，因为数十年来这就是在Lisp中对其进行命名的方式。给定一个单元格对象，我们可以使用函数car和cdr从该对中检索相应的值。因此：
+
+```js
 x = cons(10, 20);
 print(car(x));    # prints 10
 print(cdr(x));    # prints 20
 ```
 
-Given these, it's easy to define a list:
+有了这些，很容易定义一个列表：
 
-  > A list is a cell object which has the first element in its car, and the rest of the elements in its cdr. But the cdr can store a single value! That value is a list. A list is a cell object which has the first element in its car, and the rest of the elements in its cdr. But the cdr can store a single value! That value is a list. […]
+> 列表是一个单元格对象，在其汽车中具有第一个元素，而在其cdr中具有其余元素。但是cdr可以存储单个值！该值是一个列表。列表是一个单元格对象，在其汽车中具有第一个元素，而在其cdr中具有其余元素。但是cdr可以存储单个值！该值是一个列表 […]
 
-So it's a recursive data structure (defined in terms of itself). A single problem remains: when do we stop? Intuitively, we stop when the cdr is the empty list, but what is the empty list? For this we'll introduce a new special object called NIL. It can be treated as a cell (we can apply car and cdr on it, but the result is itself) — but it's not a real cell… let's just say it's a fake one. Then, here's how to construct the list 1, 2, 3, 4, 5:
+因此，这是一个递归数据结构（根据自身定义）。唯一的问题仍然存在：我们什么时候停止？直观地，当cdr为空列表时，我们停止，但是什么是空列表？为此，我们将介绍一个称为NIL的新特殊对象。它可以被视为一个单元格（我们可以在其上应用car和cdr，但结果本身就是它）—但这不是一个真正的单元格……让我们说这是一个假单元格。然后，下面是构造列表1、2、3、4、5的方法：
 
-```
+```js
 x = cons(1, cons(2, cons(3, cons(4, cons(5, NIL)))));
 print(car(x));                      # 1
 print(car(cdr(x)));                 # 2  in Lisp this is abbrev. cadr
@@ -50,66 +65,104 @@ print(car(cdr(cdr(cdr(x)))));       # 4                          cadddr
 print(car(cdr(cdr(cdr(cdr(x))))));  # 5  but no abbreviation for this one.
 ```
 
-It looks awful when the proper syntax is missing. But I just wanted to show that it's possible to build such a data structure in our seemingly limited λanguage. Here are the definitions:
+当缺少正确的语法时，它看起来很糟糕。但是我只是想表明，有可能在我们看似有限的λ语言中建立这样的数据结构。以下是定义：
 
-```
+```js
 cons = λ(a, b) λ(f) f(a, b);
 car = λ(cell) cell(λ(a, b) a);
 cdr = λ(cell) cell(λ(a, b) b);
 NIL = λ(f) f(NIL, NIL);
 ```
 
-When I first saw cons/car/cdr implemented this way I found intimidating the fact that they don't even need if (but that's not so surprising, since there is no if in the original λ-calculus). Of course, no language does it like this in practice because it's very inefficient, but that doesn't make it less beautiful. In English, the above code states:
+当我第一次看到cons / car / cdr以这种方式实现时，我发现它们甚至不需要if就吓人了（但这并不令人惊讶，因为原始的λ微积分中没有if）。当然，没有一种语言在实践中会这样做，因为它的效率很低，但这并不会降低它的美观性。用英语来说，上面的代码指出：
 
-- cons takes two values (a, b) and returns a function that closes over them. That function is the “cell object”. It takes a function argument (f) and calls it with both the values it stored.
+- cons接受两个值(a, b)并返回一个关闭它们的函数。该功能是“单元对象”。它接受一个函数参数（f），并使用存储的两个值对其进行调用。
 
-- car takes a “cell object” (so, that function) and calls it with a function that receives two arguments and returns the first one.
+- car 接受一个“单元对象”（即该函数），并使用一个接收两个参数并返回第一个参数的函数对其进行调用。
 
-- cdr is like car, but the function it sends to the cell returns the second argument.
+- cdr就像car，但是它发送到单元格的函数返回第二个参数。
 
-- NIL mimics a cell, in that it's a function which takes one function argument (f) but always calls it with two NIL-s (so, both car(NIL) and cdr(NIL) will equal NIL).
+- NIL模仿一个单元格，因为它是一个函数，它接受一个函数参数（f），但始终使用两个NIL-s进行调用（因此car（NIL）和cdr（NIL）都等于NIL）。
 
 
-```
-cons = λ(a, b) λ(f) f(a, b);
-car = λ(cell) cell(λ(a, b) a);
-cdr = λ(cell) cell(λ(a, b) b);
-NIL = λ(f) f(NIL, NIL);
 
-x = cons(1, cons(2, cons(3, cons(4, cons(5, NIL)))));
-println(car(x));                      # 1
-println(car(cdr(x)));                 # 2
-println(car(cdr(cdr(x))));            # 3
-println(car(cdr(cdr(cdr(x)))));       # 4
-println(car(cdr(cdr(cdr(cdr(x))))));  # 5
+  ```js
+  cons = λ(a, b) λ(f) f(a, b);
+  car = λ(cell) cell(λ(a, b) a);
+  cdr = λ(cell) cell(λ(a, b) b);
+  NIL = λ(f) f(NIL, NIL);
+  
+  x = cons(1, cons(2, cons(3, cons(4, cons(5, NIL)))));
+  println(car(x));                      # 1
+  println(car(cdr(x)));                 # 2
+  println(car(cdr(cdr(x))));            # 3
+  println(car(cdr(cdr(cdr(x)))));       # 4
+  println(car(cdr(cdr(cdr(cdr(x))))));  # 5打印结果
+  ```
 
-```
-There are many interesting list algorithms that can be implemented recursively and it's very natural, since the structure itself is recursively defined. For example here's a function that applies a function to every element of a list:
+  打印结果
 
-```
-foreach = λ(list, f)
-            if list != NIL {
-              f(car(list));
-              foreach(cdr(list), f);
-            };
-foreach(x, println);
+  ```
+  1
+  2
+  3
+  4
+  5
+  ***Result: false
+  ```
 
-```
-And here's another one that builds a list with a range of numbers:
+  有很多有趣的列表算法可以递归实现，这很自然，因为结构本身是递归定义的。例如，下面的函数将一个函数应用于列表的每个元素：
 
-```
+  ```js
+  foreach = λ(list, f)
+              if list != NIL {
+                f(car(list));
+                foreach(cdr(list), f);
+              };
+  foreach(x, println);
+  打印结果
+  ```
+
+  打印结果
+
+  ```js
+  1
+  2
+  3
+  4
+  5
+  ***Result: false
+  ```
+
+
+这是另一个构建带有一系列数字的列表的列表：
+
+```js
 range = λ(a, b)
           if a <= b then cons(a, range(a + 1, b))
                     else NIL;
 
 # print the squares of 1..8
 foreach(range(1, 8), λ(x) println(x * x));
-
 ```
 
-The lists we have so far are immutable (you cannot alter the car nor the cdr once a cell is created). Most Lisps provide some way to alter a cons cell. In Scheme it's called set-car! / set-cdr!. In Common Lisp they're suggestively named rplaca / rplacd. We'll prefer the Scheme names this time:
+打印结果：
 
+```js
+1
+4
+9
+16
+25
+36
+49
+64
+***Result: false
 ```
+
+到目前为止，我们的列表是不可变的（一旦创建了单元，就无法更改汽车或cdr）。大多数Lisps提供了一些更改Cons单元的方法。在Scheme中，它称为set-car！/ set-cdr!。在Common Lisp中，它们被暗示地命名为rplaca / rplacd。这次我们更喜欢Scheme名称：
+
+```js
 cons = λ(x, y)
          λ(a, i, v)
            if a == "get"
@@ -137,6 +190,19 @@ println(cdr(x));
 
 ```
 
-This shows that it's possible to implement mutable compound data structures. I won't comment on how it works, it's pretty straightforward.
+打印结果：
 
-We could move forward and implement objects, but the inability to modify the syntax from within the λanguage will make it very awkward. The other option is to introduce new syntax in the tokenizer/parser, and maybe add new semantics in the evaluator. That's what all the mainstream languages do, and it's many times a necessary move in order to get acceptable performance. We'll explore adding some new syntax in the next section.
+```js
+1
+2
+10
+20
+***Result: false
+```
+
+这表明可以实现可变的复合数据结构。我不会评论它是如何工作的，这非常简单。
+
+我们可以前进并实现对象，但是无法从λ语言内部修改语法会使它很尴尬。另一种选择是在令牌生成器/解析器中引入新的语法，并可能在评估器中添加新的语义。这就是所有主流语言所要做的，并且它是获得可接受性能的许多必要步骤。我们将在下一节中探索添加一些新语法。
+
+
+

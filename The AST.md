@@ -4,177 +4,27 @@
 
 #### In short:
 ```js
-num { type: "num", value: NUMBER }
-str { type: "str", value: STRING }
-bool { type: "bool", value: true or false }
-var { type: "var", value: NAME }
+num    { type: "num", value: NUMBER }
+str    { type: "str", value: STRING }
+bool   { type: "bool", value: true or false }
+var    { type: "var", value: NAME }
 lambda { type: "lambda", vars: [ NAME... ], body: AST }
-call { type: "call", func: AST, args: [ AST... ] }
-if { type: "if", cond: AST, then: AST, else: AST }
+call   { type: "call", func: AST, args: [ AST... ] }
+if     { type: "if", cond: AST, then: AST, else: AST }
 assign { type: "assign", operator: "=", left: AST, right: AST }
 binary { type: "binary", operator: OPERATOR, left: AST, right: AST }
-prog { type: "prog", prog: [ AST... ] }
-let { type: "let", vars: [ VARS... ], body: AST }
+prog   { type: "prog", prog: [ AST... ] }
+let    { type: "let", vars: [ VARS... ], body: AST }
 ```
 
 #### Examples
 
-```
- Numbers ("num")
+![image-20191015234910780](/Users/go7hic/workspace/Github/How-to-implement-a-programming-language-in-JavaScript/image-20191015234910780.png)
 
-123.5 →	{ type: "num", value: 123.5 }
+![image-20191016002002431](/Users/go7hic/workspace/Github/How-to-implement-a-programming-language-in-JavaScript/image-20191016002002431.png)
 
- Strings ("str")
+![image-20191016003117285](/Users/go7hic/workspace/Github/How-to-implement-a-programming-language-in-JavaScript/image-20191016003117285.png)
 
-"Hello World!" →	{ type: "str", value: "Hello World!" }
+![image-20191016103201171](/Users/go7hic/workspace/Github/How-to-implement-a-programming-language-in-JavaScript/image-20191016103201171.png)
 
- Booleans ("bool")
-
-true     { type: "bool", value: true }
-false →	 { type: "bool", value: false }
-
- Identifiers ("var")
-
-foo →	{ type: "var", value: "foo" }
-
- Functions ("lambda")
-
-                       	{
-                              type: "lambda",
-lambda (x) 10   # or
-λ (x) 10             →        vars: [ "x" ],
-                              body: { type: "num", value: 10 }
-                          }
-                          
-                          
- 
- 
-Function calls ("call")
-
-
-              {
-                "type": "call",
-                "func": { "type": "var", "value": "foo" },
-                "args": [
-foo(a, 1)  →	    { "type": "var", "value": "a" },
-                  { "type": "num", "value": 1 }
-                ]
-              }
-
-
-
-
-Conditionals ("if")
-
-
-                                  {
-                                    "type": "if",
-                                    "cond": { "type": "var", "value": "foo" },
- if foo then bar else baz  →	       "then": { "type": "var", "value": "bar" },
-                                    "else": { "type": "var", "value": "baz" }
-                                  }
-
-
-
-Assignment ("assign")
-
-
-                                  {
-                                    "type": "assign",
-                                    "operator": "=",
-a = 10 →	                           "left": { "type": "var", "value": "a" },
-                                    "right": { "type": "num", "value": 10 }
-                                  }
-                                  
-                                  
-Binary expressions ("binary")
-
-	
-                                    {
-                                      "type": "binary",
-                                      "operator": "+",
-                                      "left": { "type": "var", "value": "x" },
-                                      "right": {
-x + y * z  →                            "type": "binary",
-                                        "operator": "*",
-                                        "left": { "type": "var", "value": "y" },
-                                        "right": { "type": "var", "value": "z" }
-                                      }
-                                    }   
-    
-    
-    
-    
- Sequences ("prog")
-
-	
-                                                          {
-                                                            "type": "prog",
-                                                            "prog": [
-                                                              {
-                                                                "type": "assign",
-                                                                "operator": "=",
-                                                                "left": { "type": "var", "value": "a" },
-                                                                "right": { "type": "num", "value": 5 }
-                                                              },
-                                                              {
-                                                                "type": "assign",
-                                                                "operator": "=",
-                                                                "left": { "type": "var", "value": "b" },
-                                                                "right": {
-{
-  a = 5;
-  b = a * 2;                  → 
-  a + b;
-}                                                                  "type": "binary",
-                                                                  "operator": "*",
-                                                                  "left": { "type": "var", "value": "a" },
-                                                                  "right": { "type": "num", "value": 2 }
-                                                                }
-                                                              },
-                                                              {
-                                                                "type": "binary",
-                                                                "operator": "+",
-                                                                "left": { "type": "var", "value": "a" },
-                                                                "right": { "type": "var", "value": "b" }
-                                                              }
-                                                            ]
-                                                          }
-
-
-
-
-
-Block scoped variables ("let")
-
-
-
-                                              {
-                                                "type": "let",
-                                                "vars": [
-                                                  {
-                                                    "name": "a",
-                                                    "def": { "type": "num", "value": 10 }
-                                                  },
-                                                  {
-                                                    "name": "b",
-  
-let (a = 10, b = a * 10) {
-  a + b;                             →	
-}                                                  "def": {
-                                                      "type": "binary",
-                                                      "operator": "*",
-                                                      "left": { "type": "var", "value": "a" },
-                                                      "right": { "type": "num", "value": 10 }
-                                                    }
-                                                  }
-                                                ],
-                                                "body": {
-                                                  "type": "binary",
-                                                  "operator": "+",
-                                                  "left": { "type": "var", "value": "a" },
-                                                  "right": { "type": "var", "value": "b" }
-                                                }
-                                              }
-
-```
+![image-20191016103124496](/Users/go7hic/workspace/Github/How-to-implement-a-programming-language-in-JavaScript/image-20191016103124496.png)

@@ -1,10 +1,10 @@
-## Guarding the stack
+## 保护堆栈
 
-In the CPS evaluator the stack is exhausted much quicker because the evaluator ever keeps calling other functions, and never returns. Do not be tricked by the return statements—they are necessary, but in the case of a very deep recursion they are never reached, because we get a stack overflow error instead.
+在CPS评估程序中，堆栈被更快地耗尽，因为评估程序一直不断调用其他函数，并且永不返回。不要被return语句欺骗-它们是必需的，但是在非常深的递归情况下，它们永远不会到达，因为相反，我们会得到堆栈溢出错误。
 
-Let's imagine how the stack looks for a very simple program. I'll show pseudo-code and I'm not including the env as it's not important for making this point
+让我们想象一下堆栈如何寻找一个非常简单的程序。我将显示伪代码，但我不包含env，因为这对于指出这一点并不重要
 
-```
+```js
 print(1 + 2 * 3);
 
 ## stack:
@@ -23,18 +23,22 @@ evaluate( print(1 + 2 * 3), K0 )
                         K2(7)  # the result of 1+2*3
                           print(K0, 7)  # finally get to call print
                             K0(false)  # original continuation. print returns false.
+                            
 ```
 
-Only after the last continuation runs (K0) will a long sequence of pointless return-s rewind the stack. If we nest so much even for a trivial program, it's easy to imagine how fib(13) runs out of stack space.
+只有在最后一次连续运行（K0）之后，一长串无意义的返回-s后退堆栈。如果即使对于一个琐碎的程序我们也嵌套了很多东西，那么很容易想象fib（13）是如何耗尽堆栈空间的。
 
-### A stack guard
-The way we wrote the new evaluator, the stack is simply garbage. All the computation that needs to happen after each step is enclosed in the callback, which is passed as an argument. So this begs the question: what if JavaScript would provide some way to reset the stack? Then we could do it every now and then, like some kind of garbage collection, and deep recursion will work.
 
-Let's assume we have a GUARD function which can do that. It receives two values: a function to call and an array of arguments to pass to it. It checks if the stack is too nested, and if so, it'll reset the stack and call that function thereafter. Otherwise it does nothing.
 
-Using this function we'll rewrite our evaluator as follows. I will not comment on each case because it's the same code as before; the only addition is GUARD-ing every single function, before doing anything else.
+#### 堆栈守卫
 
-```
+我们编写新评估程序的方式，栈简直就是垃圾。在每个步骤之后需要进行的所有计算都包含在回调中，该回调作为参数传递。因此，这就引出了一个问题：如果JavaScript提供某种方式来重置堆栈该怎么办？然后，我们可以不时地这样做，就像某种垃圾回收一样，深度递归也将起作用。
+
+假设我们有一个可以做到这一点的GUARD函数。它接收两个值：要调用的函数和要传递给它的参数数组。它检查堆栈是否嵌套过多，如果嵌套过多，它将重置堆栈并在此后调用该函数。否则它什么都不做。
+
+使用此函数，我们将按如下方式重写评估程序。我不会在每种情况下发表评论，因为它与以前的代码相同。唯一的补充是在执行其他任何操作之前，请确保对每个功能进行保护。
+
+```js
 function evaluate(exp, env, callback) {
     GUARD(evaluate, arguments);
     switch (exp.type) {
@@ -134,11 +138,14 @@ function evaluate(exp, env, callback) {
     }
 }
 ```
-For anonymous functions I had to declare a name in order to refer to them. I used CC (stands for “current continuation”). An alternative would be arguments.callee but let's not use deprecated API.
 
-Also, a similar one-line change in make_lambda:
+对于匿名函数，我必须声明一个名称才能引用它们。我使用CC（代表“当前延续”）。一个替代方法是arguments.callee，但不要使用不推荐使用的API。
 
-```
+
+
+同样，make_lambda中有类似的单行更改：
+
+```js
 function make_lambda(env, exp) {
     if (exp.name) {
         env = env.extend();
@@ -154,11 +161,11 @@ function make_lambda(env, exp) {
     }
     return lambda;
 }
-
 ```
-The implementation of GUARD is really simple. How do you exit abruptly from e deeply nested call? — using exceptions. So we'll maintain a global variable for the stack nesting limit and when it's too deep, throw. We throw a Continuation object which holds the future of the computation — a function to call and its arguments:
 
-```
+GUARD的实现非常简单。如何从深层嵌套呼叫突然退出？-使用例外。因此，我们将为堆栈嵌套限制维护一个全局变量，当它太深时，抛出该异常。我们抛出一个Continuation对象，该对象保存了计算的未来—一个要调用的函数及其参数：
+
+```js
 var STACKLEN;
 function GUARD(f, args) {
     if (--STACKLEN < 0) throw new Continuation(f, args);
@@ -168,7 +175,8 @@ function Continuation(f, args) {
     this.args = args;
 }
 ```
-Finally, we need to setup a loop that will catch Continuation objects. We'll have to run our evaluator through that loop in order for the whole trick to work.
+
+最后，我们需要设置一个循环来捕获Continuation对象。为了使整个技巧生效，我们将必须通过该循环运行评估程序。
 
 ```
 function Execute(f, args) {
@@ -183,9 +191,9 @@ function Execute(f, args) {
 }
 ```
 
-Execute takes a function to run and arguments to pass it. It does that in a loop, but note the return—in the event the function runs without blowing the stack, we stop there. STACKLEN is initialized every time we resume the loop. I found 200 to be a good value. When a Continuation is caught, reinstate the new function and arguments and continue the loop. The stack is cleared at this point by the exception, so we can nest again.
+Execute需要一个函数来运行，并传递参数。它会循环执行此操作，但要注意返回值—如果函数运行时没有破坏堆栈，我们将在此处停止。每次恢复循环时，都会初始化STACKLEN。我发现200物有所值。捕获到Continuation后，请恢复新函数和参数并继续循环。此时堆栈会被异常清除，因此我们可以再次嵌套.
 
-To run our evaluator now with Execute, we do something like this:
+要现在使用Execute运行评估程序，我们需要执行以下操作：
 
 ```
 Execute(evaluate, [ ast, globalEnv, function(result){
@@ -193,23 +201,44 @@ Execute(evaluate, [ ast, globalEnv, function(result){
 }]);
 ```
 
-### Test
+#### 测试
 
-Our fib function won't fail anymore:
+我们的fib函数不会再失败了：
 
-```
+```js
 fib = λ(n) if n < 2 then n else fib(n - 1) + fib(n - 2);
 time( λ() println(fib(20)) );
-```
-Unfortunately, if you try fib(27) the execution time will be about about 4 times slower than with the first (non-CPS) version of the evaluator. But at least we have unlimited recursion, for example:
 
 ```
+
+Run result:
+
+```
+6765
+Time: 439ms
+***Result: false
+
+```
+
+
+
+不幸的是，如果您尝试使用fib（27），执行时间将比评估程序的第一个（非CPS）版本慢大约4倍。但是至少我们有无限的递归，例如：
+
+```js
 sum = λ(n, ret)
         if n == 0 then ret
                   else sum(n - 1, ret + n);
 
 # compute 1 + 2 + ... + 50000
 time( λ() println(sum(50000, 0)) );
+```
+
+Run result:
 
 ```
-Our language is much slower than JavaScript indeed! Just imagine that every variable lookup has to go through our Environment object. Trying to optimize the interpreter is pointless—we won't get far. The solution for better speed is to compile λanguage to native JS, and that's what we'll do. But first let's see some interesting consequences of having a CPS evaluator.
+1250025000
+Time: 715ms
+***Result: false
+```
+
+我们的语言确实比JavaScript慢得多！试想一下，每个变量查找都必须通过我们的Environment对象。试图优化解释器是没有意义的，我们不会走得太远。提高速度的解决方案是将λanguage编译为本地JS，这就是我们要做的。但是首先让我们看看使用CPS评估程序会产生一些有趣的结果。
