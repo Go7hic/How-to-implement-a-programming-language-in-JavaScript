@@ -2,6 +2,8 @@
 【译】用 JavaScript 实现一门编程语言
 > 原系列文章 http://lisperator.net/pltut/
 
+在线阅读： https://go7hic.github.io/How-to-implement-a-programming-language-in-JavaScript/#/
+
 ## 目录
 - Introduction
 - λanguage description

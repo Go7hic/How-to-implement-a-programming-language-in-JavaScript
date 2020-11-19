@@ -11,3 +11,7 @@
   * [Simple interpreter](Simple_interpreter.md)
   * [Test what we have](Test_what_we_have.md)
   * [Adding new constructs](Adding_new_constructs.md)
+  * [How fast are we?](How_fast_are_we.md.md)
+* [CPS Evaluator](CPS_Evaluator.md)
+  * [Guarding the stack](Guarding_the_stack.md)
+  * [Continuations](Continuations.md)
