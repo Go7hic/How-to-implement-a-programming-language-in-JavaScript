@@ -124,3 +124,63 @@ yield(2);
 ```
 
 但是，谁在这延续中屈服呢?它与第一个yield相同，后者实际上返回保存的第一个kret延续，即打印结果并从那里继续，从而产生一个循环。幸运的是，有一个简单的解决方法。很明显，我们应该只创建一次yield闭包，因为我们不能在第一次调用后在函数中更改它;为了返回到适当的退出点，我们维护了一个新的return变量
+```
+with-yield = λ(func) {
+  let (return, yield) {
+    yield = λ(value) {
+      CallCC(λ(kyld){
+        func = kyld;
+        return(value);       # return is set below, on each call to the function
+      });                    # it's always the next return point.
+    };                       #
+    λ(val) {                 #
+      CallCC(λ(kret){        #
+        return = kret;       # <- here
+        func(val || yield);
+      });
+    };
+  };
+};
+
+```
+
+此外，认识到每次都向函数传递yield(只有第一次传递)没有意义，这个新版本允许在每次调用时传递另一个值(第一次调用除外)。这将是yield本身的返回值。
+
+下面的代码仍然使用foo示例，但是它只使用了三次println(foo())
+```
+with-yield = λ(func) {
+  let (return, yield) {
+    yield = λ(value) {
+      CallCC(λ(kyld){
+        func = kyld;
+        return(value);
+      });
+    };
+    λ(val) {
+      CallCC(λ(kret){
+        return = kret;
+        func(val || yield);
+      });
+    };
+  };
+};
+
+foo = with-yield(λ(yield){
+  yield(1);
+  yield(2);
+  yield(3);
+  "DONE";
+});
+
+println(foo());
+println(foo());
+println(foo());
+```
+
+Result:
+```
+1
+2
+3
+***Result: false
+```
