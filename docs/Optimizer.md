@@ -167,20 +167,20 @@ Transformation:
 });
 ```
 
-```js
+<pre>
 (function β_CC(β_K1) {
   var a, b;
   GUARD(arguments, β_CC);
   a = 2, b = 5, print(β_K1, a + b);
 })(β_TOPLEVEL);
-```
+</pre>
 
 
 没有名称冲突，因此a和b变量不会重命名。 如您所见，to_cps通过将其编译为IIFE-s来增加了一个简单的let的开销，但是优化器能够丢弃该问题。
 
 Transformation
 
-```js
+<pre>
 (function β_CC(β_K1) {
   GUARD(arguments, β_CC);
   (function β_CC(β_K2, a) {
@@ -206,9 +206,9 @@ Transformation
   GUARD(arguments, β_CC);
   β_TOPLEVEL(β_R8);
 });
-```
+</pre>
 
-```js
+<pre>
 (function β_CC(β_K1) {
   var a, β_K3, β_a$9;
   GUARD(arguments, β_CC);
@@ -216,8 +216,7 @@ Transformation
     print(β_K1, a);
   }, β_a$9 = 3, print(β_K3, β_a$9);
 })(β_TOPLEVEL);
-```
-
+</pre>
 
 
 #### 实现概述
@@ -258,7 +257,7 @@ Transformation
 #### The optimize function
 
 如前所述，它将在进入每个优化程序阶段之前调用make_scope，并重复进行直到没有更多更改为止。 最后，在返回优化表达式之前，它将顶级作用域保存在env属性中。 这是入口点：
-```
+```js
 function optimize(exp) {
     do {
         var changes = 0;
